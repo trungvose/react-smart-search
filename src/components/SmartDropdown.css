@@ -1,0 +1,16 @@
+.custom-caret {
+  background: url("http://cdn1.iconfinder.com/data/icons/cc_mono_icon_set/blacks/16x16/br_down.png")
+    white no-repeat 98.5% !important;
+  background: url("http://cdn1.iconfinder.com/data/icons/cc_mono_icon_set/blacks/16x16/br_down.png")
+    white no-repeat calc(100% - 10px) !important;
+}
+
+.search-dropdown-container {
+  padding: 10px;
+  border: 1px solid #eee;
+}
+
+.list-group-item:hover {
+  background: #eee;
+  cursor: pointer;
+}
