@@ -1,23 +1,21 @@
 import React, { Component } from "react";
 import { SearchResultItem } from "../model/search-result";
 import "./SmartDropdown.css";
+import { Callback } from "../model/callback";
 
 export interface SearchProps {
-  maxItem?: number;
-  placeHolder?: string;
+  maxItem: number;
   isLoading: boolean;
   items: SearchResultItem[];
+  selectedItem?: string;
+  placeHolder?: string;
+  onSelected?: Callback<string>;
 }
 
 export interface SearchState {
-  selectedItem: string;
   keyword: string;
   showSuggestion: boolean;
   slicedItems: SearchResultItem[];
-}
-
-interface Callback {
-  (item: string): void;
 }
 
 export default class SmartDropdown extends Component<SearchProps, SearchState> {
@@ -25,10 +23,11 @@ export default class SmartDropdown extends Component<SearchProps, SearchState> {
     maxItem: 5,
     isLoading: false,
     items: [],
+    placeHolder: "",
+    selectedItem: undefined,
   };
 
   state: SearchState = {
-    selectedItem: "",
     slicedItems: [],
     keyword: "",
     showSuggestion: false,
@@ -43,7 +42,7 @@ export default class SmartDropdown extends Component<SearchProps, SearchState> {
   }
 
   renderSearchResult() {
-    let { isLoading, maxItem, items } = this.props;
+    let { isLoading, maxItem, items, selectedItem } = this.props;
 
     if (isLoading) {
       return this.renderItem("Loading...");
@@ -54,7 +53,12 @@ export default class SmartDropdown extends Component<SearchProps, SearchState> {
     }
 
     let elements = this.state.slicedItems.map((item) => {
-      return this.renderItem(item.name, this.selectItem);
+      let isSelected = selectedItem === item.name;
+      return this.renderItem(
+        item.name,
+        this.selectItem,
+        isSelected ? "active" : ""
+      );
     });
 
     let isRenderAllItems = items.length === this.state.slicedItems.length;
@@ -72,10 +76,10 @@ export default class SmartDropdown extends Component<SearchProps, SearchState> {
   }
 
   selectItem(selectedItem: string) {
-    console.log(selectedItem);
-    this.setState({
-      selectedItem,
-    });
+    let { onSelected } = this.props;
+    if (typeof onSelected === "function") {
+      onSelected(selectedItem);
+    }
     this.hideSuggestion();
   }
 
@@ -85,7 +89,7 @@ export default class SmartDropdown extends Component<SearchProps, SearchState> {
     });
   }
 
-  renderItem(text: string, onClick?: Callback, additionalClass = "") {
+  renderItem(text: string, onClick?: Callback<string>, additionalClass = "") {
     return (
       <li
         key={text}
@@ -112,12 +116,12 @@ export default class SmartDropdown extends Component<SearchProps, SearchState> {
   }
 
   render() {
-    let { placeHolder } = this.props;
+    let { placeHolder, selectedItem } = this.props;
     return (
       <div className="search-container">
         <div className="search-textbox">
           <input
-            value={this.state.selectedItem}
+            value={selectedItem}
             onFocus={this.showSuggestion.bind(this)}
             className="form-control custom-caret"
             placeholder={placeHolder}

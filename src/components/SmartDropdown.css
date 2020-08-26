@@ -10,7 +10,7 @@
   border: 1px solid #eee;
 }
 
-.list-group-item:hover {
+.list-group-item:hover:not(.active) {
   background: #eee;
   cursor: pointer;
 }
