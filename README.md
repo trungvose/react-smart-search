@@ -2,6 +2,17 @@
 
 Specially prepare for DBS.
 
+![Demo][demo]
+
+[demo]: public/readme/demo.gif
+
+## Limitation
+
+- If you select the option on the see more section, I haven't changed brought the selection to the top of the list. So that next time you open the dropdown, you have to select expand all of the option to see the selected item. Usually It will be handled by client side.
+- I used RxJS for the debounce because I was familiar with Subject and Observable while working with Angular.
+
+Thanks for reviewing and I hope you like the code. If not, let me know your comments so that I can improve further.
+
 ## Available Scripts
 
 In the project directory, you can run:
