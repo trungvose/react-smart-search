@@ -13,7 +13,7 @@ export const MOCK_RESULTS = [
     name: "Indonesia",
   },
   {
-    name: "Phillipines",
+    name: "Philippines",
   },
   {
     name: "Thailand",

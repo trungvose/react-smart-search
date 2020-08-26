@@ -1,7 +1,9 @@
-import React, { Component } from "react";
+import React, { Component, ChangeEvent } from "react";
 import { SearchResultItem } from "../model/search-result";
 import "./SmartDropdown.css";
 import { Callback } from "../model/callback";
+import { Subject } from "rxjs";
+import { debounceTime } from "rxjs/operators";
 
 export interface SearchProps {
   maxItem: number;
@@ -9,7 +11,10 @@ export interface SearchProps {
   items: SearchResultItem[];
   selectedItem?: string;
   placeHolder?: string;
+  hasAddPrivilege?: boolean;
   onSelected?: Callback<string>;
+  onSearch?: Callback<string>;
+  addNewOption?: Callback<string>;
 }
 
 export interface SearchState {
@@ -19,11 +24,14 @@ export interface SearchState {
 }
 
 export default class SmartDropdown extends Component<SearchProps, SearchState> {
+  keywordChange$ = new Subject<string>();
+
   static defaultProps: SearchProps = {
     maxItem: 5,
     isLoading: false,
     items: [],
     placeHolder: "",
+    hasAddPrivilege: false,
     selectedItem: undefined,
   };
 
@@ -33,12 +41,24 @@ export default class SmartDropdown extends Component<SearchProps, SearchState> {
     showSuggestion: false,
   };
 
-  componentWillReceiveProps() {
-    let { maxItem, items } = this.props;
-
-    this.setState({
-      slicedItems: items.slice(0, maxItem),
+  componentDidMount() {
+    this.keywordChange$.pipe(debounceTime(300)).subscribe((keyword) => {
+      this.search(keyword);
     });
+  }
+
+  componentDidUpdate(prevProps: SearchProps) {
+    if (this.props.items !== prevProps.items) {
+      let { maxItem, items } = this.props;
+
+      this.setState({
+        slicedItems: items.slice(0, maxItem),
+      });
+    }
+  }
+
+  componentWillUnmount() {
+    this.keywordChange$.subscribe();
   }
 
   renderSearchResult() {
@@ -49,7 +69,7 @@ export default class SmartDropdown extends Component<SearchProps, SearchState> {
     }
 
     if (!items.length) {
-      return this.renderItem(`${this.state.keyword} not found.`);
+      return this.renderNotFound();
     }
 
     let elements = this.state.slicedItems.map((item) => {
@@ -83,10 +103,46 @@ export default class SmartDropdown extends Component<SearchProps, SearchState> {
     this.hideSuggestion();
   }
 
+  search(keyword: string) {
+    this.setState({
+      keyword,
+    });
+    let { onSearch } = this.props;
+    if (onSearch) {
+      onSearch(keyword);
+    }
+  }
+
   showAll() {
     this.setState({
       slicedItems: this.props.items,
     });
+  }
+
+  renderNotFound() {
+    return (
+      <li className={`list-group-item d-flex`}>
+        <span className="flex-grow-1">"{this.state.keyword}" not found.</span>
+        {this.props.hasAddPrivilege && (
+          <button
+            className="btn btn-primary btn-sm"
+            onClick={this.addAndSelectKeyword.bind(this)}
+          >
+            Add & Select
+          </button>
+        )}
+      </li>
+    );
+  }
+
+  addAndSelectKeyword() {
+    let { addNewOption } = this.props;
+    if (addNewOption) {
+      this.setState({
+        showSuggestion: false,
+      });
+      addNewOption(this.state.keyword);
+    }
   }
 
   renderItem(text: string, onClick?: Callback<string>, additionalClass = "") {
@@ -132,6 +188,7 @@ export default class SmartDropdown extends Component<SearchProps, SearchState> {
           <div className="search-dropdown-container">
             <div className="search-input">
               <input
+                onChange={(e) => this.keywordChange$.next(e.target.value)}
                 type="text"
                 className="form-control"
                 placeholder="Search"
